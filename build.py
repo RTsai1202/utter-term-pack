@@ -63,7 +63,8 @@ def main():
         "format": 1,
         "version": int(datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H")),
         "source": "Wikidata (CC0 1.0), https://www.wikidata.org/",
-        "entries": [{"id": e["id"], "t": e["t"], "c": e["c"], "zh": e["zh"]} for e in items],
+        # 不放 Wikidata id：App 用不到
+        "entries": [{"t": e["t"], "c": e["c"], "zh": e["zh"]} for e in items],
     }
     with open(a.out, "w", encoding="utf-8") as f:
         json.dump(pack, f, ensure_ascii=False, separators=(",", ":"))
