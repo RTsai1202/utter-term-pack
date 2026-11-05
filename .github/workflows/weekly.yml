@@ -1,0 +1,36 @@
+name: 每週更新術語詞包
+on:
+  schedule:
+    - cron: "0 18 * * 0"   # 每週一 02:00（台灣時間）
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install cryptography==43.0.3
+      - name: 產生詞包（Wikidata CC0）
+        run: python3 build.py --out new.json
+      - name: 檢查
+        run: python3 check.py new.json term-pack.json
+      - name: 簽章並驗證
+        env:
+          TERM_PACK_KEY: ${{ secrets.TERM_PACK_KEY }}
+        run: |
+          python3 sign.py sign new.json
+          python3 sign.py verify new.json "$(cat public-key.txt)"
+      - name: 發布
+        run: |
+          mv new.json term-pack.json
+          mv new.json.sig term-pack.json.sig
+          git config user.name "term-pack-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add term-pack.json term-pack.json.sig
+          git diff --cached --quiet || git commit -m "每週更新詞包"
+          git push
